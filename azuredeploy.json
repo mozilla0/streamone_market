@@ -1,0 +1,304 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "siteName": {
+      "type": "String",
+      "minLength": 1
+    },
+    "siteLocation": {
+      "type": "string"
+    },
+    "SQL Password": {
+      "type": "String",
+      "minLength": 1
+    },
+    "repoURL": {
+      "type": "string",
+      "defaultValue": "https://github.com/techdata-cloudautomation/cpsso.git",
+      "metadata": {
+        "description": "The URL for the GitHub repository that contains the project to deploy."
+      }
+    },
+	"applicationId": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the application Id value."
+      },
+	  "minLength": 1
+    },
+	 "application Password": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the Application Passcode"
+      },
+	  "minLength": 1
+    },
+	"allowedResellers": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the allowedResellers"
+      },
+	  "minLength": 1
+    },
+	"clientId (Password)": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the ClientId"
+      },
+	  "minLength": 1
+    },
+	"client Secret (Password)": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the clientSecret"
+      },
+	  "minLength": 1
+    },
+	"resellerId": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the resellerId"
+      },
+	  "minLength": 1
+    },
+	"SOIN (Password)": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the SOIN"
+      },
+	  "minLength": 1
+    },
+	"resellerName": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the resellerName"
+      },
+	  "minLength": 1
+    },
+	"Reseller Region": {
+      "type": "string",
+    "allowedValues": [
+      "US",
+      "EUROPE",
+      "CANADA"
+    ]
+    }, 
+
+	"notificationEmails": {
+      "type": "String",
+      "metadata": {
+        "description": "E-mail address that will be notified on every seat change"
+      },
+	  "minLength": 1
+    },
+	"notificationEmailFrom": {
+      "type": "String",
+      "metadata": {
+        "description": "E-mail that will be used with Microsoft Server to send notifications"
+      },
+	  "minLength": 1
+    },
+	"notificationEmailPassword": {
+      "type": "String",
+      "metadata": {
+        "description": "Password from NotificationE-mailFrom"
+      },
+	  "minLength": 1
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "master",
+      "metadata": {
+        "description": "The branch of the GitHub repository to use."
+      }
+    }
+  },
+  "variables": {
+    "webSiteName": "[toLower(parameters('siteName'))]",
+    "sqlserverName": "[Concat(variables('webSiteName'), 'sqlsrv')]",
+    "hostingPlanName": "cpssoplan",
+    "skuName": "F1",
+    "skuCapacity": "1",
+    "administratorLogin": "[Concat(variables('webSiteName'), '-sqladmin')]",
+    "databaseName": "master",
+    "collation": "SQL_Latin1_General_CP1_CI_AS",
+    "edition": "Basic",
+    "maxSizeBytes": "1073741824",
+    "requestedServiceObjectiveName": "Basic",
+    "appDBName": "cpssodb",
+    "appDBCollation": "SQL_Latin1_General_CP1_CI_AS",
+    "appDBEdition": "Basic",
+    "appDBRequestedServiceObjectiveName": "Basic",
+	"scriptFileName": "customscriptarm.ps1",
+	"scriptFolder": ".",
+	"passcode":"[parameters('SQL Password')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('sqlserverName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "SqlServer"
+      },
+      "apiVersion": "2014-04-01-preview",
+      "properties": {
+        "administratorLogin": "[variables('administratorLogin')]",
+        "administratorLoginPassword": "[parameters('SQL Password')]"
+      },
+      "resources": [
+        {
+          "name": "[variables('databaseName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "Database"
+          },
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers/', variables('sqlserverName'))]"
+          ],
+          "properties": {
+            "edition": "[variables('edition')]",
+            "collation": "[variables('collation')]",
+            "maxSizeBytes": "[variables('maxSizeBytes')]",
+            "requestedServiceObjectiveName": "[variables('requestedServiceObjectiveName')]"
+          }
+        },
+        {
+          "type": "firewallrules",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers/', variables('sqlserverName'))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "AllowAllWindowsAzureIps",
+          "properties": {
+            "endIpAddress": "0.0.0.0",
+            "startIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[variables('appDBName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sqlserverName'))]"
+          ],
+          "tags": {
+            "displayName": "appDB"
+          },
+          "properties": {
+            "collation": "[variables('appDBCollation')]",
+            "edition": "[variables('appDBEdition')]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[variables('appDBRequestedServiceObjectiveName')]"
+          }
+        }		
+      ]
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[variables('hostingPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "HostingPlan"
+      },
+      "sku": {
+        "name": "[variables('skuName')]",
+        "capacity": "[variables('skuCapacity')]"
+      },
+      "properties": {
+        "name": "[variables('hostingPlanName')]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[variables('webSiteName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverFarms/', variables('hostingPlanName'))]","[resourceId('Microsoft.Sql/servers/', variables('sqlserverName'))]"
+      ],
+      "properties": {
+        "name": "[variables('webSiteName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "type": "config",
+          "name": "connectionstrings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites/', variables('webSiteName'))]"
+          ],
+          "properties": {
+            "DefaultConnection": {
+              "value": "[concat('Data Source=tcp:', reference(resourceId('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', variables('databaseName'), ';User Id=', variables('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('SQL Password'), ';')]",
+              "type": "SQLServer"
+            }
+          }
+        },	
+		{
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('webSiteName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[parameters('repoURL')]",
+            "branch": "[parameters('branch')]",
+            "IsManualIntegration": true
+          }
+        },
+		{
+		  "apiVersion": "2015-08-01",
+		  "type": "config",
+          "name": "appsettings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('webSiteName'))]"
+          ],
+          "properties": {
+            "key1": "[concat(variables('sqlserverName'),'.database.windows.net')]",
+            "key2": "[concat(variables('administratorLogin'),'@',variables('sqlserverName'))]",
+			"key3": "[parameters('SQL Password')]",
+			"key4": "[parameters('siteName')]",
+			"key5": "[parameters('applicationId')]",
+			"key6": "[parameters('application Password')]",
+			"key7": "[parameters('allowedResellers')]",
+			"key8": "[parameters('clientId (Password)')]",
+			"key9": "[parameters('client Secret (Password)')]",
+			"key10": "[parameters('resellerId')]",
+			"key11": "[parameters('SOIN (Password)')]",
+			"key12": "[parameters('resellerName')]",
+			"key13": "[parameters('notificationEmails')]",
+			"key14": "[parameters('notificationEmailFrom')]",
+			"key15": "[parameters('notificationEmailPassword')]",
+			"key16": "[parameters('Reseller Region')]",
+			"APP_Client":"[parameters('Reseller Region')]"
+          }
+        }        
+      ]
+	  
+    }
+	
+  ],
+  "outputs": {
+		  "branchCode": {
+			  "type": "string",
+			  "value": "[parameters('branch')]"
+	  },
+	 
+	  "sqlpass": {
+			  "type": "securestring",
+			  "value": "[parameters('SQL Password')]"
+	  },"sqluser": {
+			  "type": "string",
+			  "value": "[variables('administratorLogin')]"
+	  }
+	}
+}

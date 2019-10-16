@@ -1,0 +1,415 @@
+﻿@model PrivateLabelLite.Models.OrderDetailModel
+@using PrivateLabelLite.Entities.Common;
+@using PrivateLabelLite.Helper;
+@{
+    ViewBag.Title = "OrderDetail";
+    bool isReseller = false;
+    if (!String.IsNullOrEmpty(User.Identity.Email()) && ConfigKeys.AllowedResellers.ToLower().Contains(User.Identity.Email().ToLower()))
+    {
+        isReseller = true;
+    }
+}
+
+<div class="container-fluid" id="order-detail" ng-controller="orderCtrl" ng-cloak ng-init='model = @Html.ToJson(Model);
+     logHistory = false;
+	 
+     setOrderStatus();
+     initUnitPrice(model.orderDetail);initUrlDetails(model.orderDetail);initOrderDetail(model,"@User.Identity.Name","@User.Identity.Email()",@isReseller.ToString().ToLower())'>
+    <div class="container-fluid">
+        
+        <div class="row">
+            <div class="row">
+                <div class="col-md-12 no-padding">
+                    <div class="col-xs-7 no-padding" ng-hide="logHistory">
+                        <h3 class="no-margin">
+                            <a ng-href="~/Order/Subscriptions/{{model.endCustomerId}} "><i class="fa fa-angle-double-left" aria-hidden="true"> &nbsp;</i></a>Order Detail <span>
+                                @if (isReseller)
+                                {<span>:</span>} {{model.orderDetail.company.companyName}}
+                        </span>
+                    </h3>
+                </div>
+                <div class="col-xs-7 no-padding" ng-show="logHistory"><h3 class="no-margin"><a href=""><i class="fa fa-angle-double-left" aria-hidden="true" ng-click="showOrderDetail()"> &nbsp;</i></a>Order History</h3></div>
+
+                <span class="pull-right"><a><i ng-click="refreshOrderDetail()" class="fa fa-refresh fa-2x" aria-hidden="true"></i></a></span>
+            </div><br><br>
+        </div>
+        <br />
+        <div class="row Card-detail">
+            @*start of 1st row(order,domain,PO,customer,history)*@
+            <div class="order-title">
+                <div class="row">
+                    <div class="order-header-table">
+                        <b>Order</b>:
+                        @if (isReseller)
+                        {
+                            <span>{{model.orderDetail.orderNumber}}</span>
+                        }
+
+                        <span ng-class="{'text-red':model.orderDetail.status=='Suspended','text-green':model.orderDetail.status=='Complete'}" title="{{model.orderDetail.status}}">
+                            <i class="fa"
+                               ng-class="{'fa-times-circle': model.orderDetail.status=='Suspended',
+                                              'fa-check-circle': model.orderDetail.status=='Complete',
+                                              'fa-spinner fa-spin no-padding': model.orderDetail.status=='Processing',
+                                              'fa-clock-o': model.orderDetail.status=='Open'
+                                             }">
+                            </i>
+                        </span>
+                    </div>
+
+                    <div class="order-header-table">
+                        <b>Domain</b> : {{ model.orderDetail.lines[0].additionalData.domain}}
+                    </div>
+                    
+                    @if (isReseller)
+                    {
+                    <div class="order-header-table">
+                        <b>Reseller PO</b> : {{model.orderDetail.resellerPoNumber}}
+                    </div>
+                    }
+                    @if (!isReseller)
+                    {
+                        <div class="order-header-table">
+                            <b>End User PO</b> : {{model.orderDetail.endUserPoNumber}}
+                        </div>
+                    }
+                    <div class="order-header-table">
+                        <b>End Customer</b> : {{model.orderDetail.endUserName}}
+                    </div>
+                    <div class="order-header-table">
+                        <span ng-hide="showDownload"><b>Log History</b> : <a href="" ng-click="viewLogHistory()">View</a></span>
+                        <span ng-show="showDownload"><b>Download History Change</b> : <a ng-click="setData(model.orderDetail.orderNumber)">CSV</a></span>
+                    </div>
+                </div>
+            </div>
+            @*end of 1st row(order,domain,PO,customer,history)*@
+            @*Start of Order Detail*@
+            <div class="col-lg-12" ng-repeat="orderLine in model.orderDetail.lines track by $index" ng-hide="logHistory">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="row no-margin">
+
+                            <div class="col-md-6 col-sm-12 col-xs-12 pull-right">
+
+                                <span>
+                                    <img src={{orderLine.imageUrl}} class="img-responsive" style="max-height:150px">
+                                </span>
+                            </div>
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <h4>BASE SUBSCRIPTION</h4>
+                                @*Activate/Deactivate subscription*@
+                                @if (isReseller)
+                                {
+                                    <label class="switch">
+                                        <span>
+
+                                            <input type="checkbox" ng-click="manageOrderStatus(orderLine.activationStatus,orderLine.sku,model.orderDetail.endUserName,model.orderDetail.orderNumber)" ng-model="orderLine.activationStatus" ng-checked="orderLine.lineStatus == 'active'">
+                                            <span class="slider round"></span>
+                                        </span>
+                                    </label>
+                                }@* End of Activate/Deactivate subscription*@
+                                    <h4>{{orderLine.skuName}}</h4>
+                                    <h5 style="display:inline-block"> SKU : {{orderLine.sku}}</h5>
+                                    <h5>
+                                        Status : <span class="capitalize" ng-class="{'text-red':orderLine.lineStatus=='cancelled','text-green':(orderLine.lineStatus=='completed' || orderLine.lineStatus=='active') }" title="{{orderLine.lineStatus}}">
+                                            <i class="fa" ng-class="{'fa-times-circle':(orderLine.lineStatus=='cancelled' || orderLine.lineStatus =='inactive'),'fa-check-circle':(orderLine.lineStatus=='completed' || orderLine.lineStatus=='active'),
+                                   'fa-hourglass-half':orderLine.lineStatus =='pending',
+                                   'fa-spinner fa-spin no-padding':orderLine.lineStatus =='processing' }"></i>
+                                        </span>
+                                    </h5>
+                                    <br>
+                                    <br>
+                                    <b>Quantity :</b> &nbsp;
+                                    <span class="counter">
+                                        <button class="btn btn-xs btn-counter" ng-disabled="(refreshingOrderDetail)" ng-click="updateOrderQuantity(orderLine,-1)"><i class="fa fa-minus" aria-hidden="true"></i></button>
+                                        @*<span class="counter-no">{{orderLine.quantity}}</span>*@<span class="counter-no"></span><span class="counter-no"></span><span class="counter-no"></span>
+                                        <input type="text" class="counter-no" ng-disabled="(refreshingOrderDetail)" ng-model="orderLine.quantity" ng-change="checkQuanityIfNull(orderLine.quantity)" />
+                                        <button class="btn btn-xs btn-counter pull-right" ng-disabled="(refreshingOrderDetail)" ng-click="updateOrderQuantity(orderLine,1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                    </span>&nbsp;
+
+                                    @if (isReseller)
+                                    {
+                                        <button class="btn btn-sm bg-theme-color" ng-disabled="refreshingOrderDetail" ng-click="confirmOrderQuantityUpdate(model.orderDetail.orderNumber,true,orderLine)">Save</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm bg-theme-color" ng-disabled="refreshingOrderDetail" ng-click="confirmOrderQuantityUpdate(model.orderDetail.orderNumber,false,orderLine)">Save</button>
+                                    }
+
+                                    @if (isReseller)
+                                    {
+                                        <div>
+                                            <br />
+                                            <b>Cost Price : </b><span>{{orderLine.currencySymbol}} {{orderLine.unitPrice | number:2}}</span><br />
+                                            <h5><b>Total Cost Price : </b><span>{{orderLine.currencySymbol}} {{orderLine.total | number:2}}</span></h5>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div ng-if="orderLine.salesPrice!=null">
+
+                                            <b>Price : </b>
+                                            <span>{{orderLine.currencySymbol}} {{orderLine.salesPrice | number:2}}</span>
+                                            <span ng-if="orderLine.taxStatus !== 'Not Defined'">
+                                                <b><span ng-bind="orderLine.taxStatus"></span></b>
+                                            </span><br />
+                                        </div>
+                                        <h5 ng-if="orderLine.salesPrice!=null"><b>Total Price : </b> <span>{{orderLine.currencySymbol}} {{orderLine.totalSalesPriceEndUser | number:2}}</span></h5>
+                                    }
+
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 no-padding">
+                        <div class="col-lg-5 no-padding addOn" ng-repeat="addOn in orderLine.addOns">
+                            <h4>&nbsp;&nbsp; ADDON</h4>
+                            <h5 class="addOn-title"> <span ng-bind="addOn.skuName"></span></h5><br>
+                            <div class="col-lg-12">SKU: <span ng-bind="addOn.sku"></span></div><br>
+                            <div class="col-lg-12 capitalize">
+                                Status : <span title="{{addOn.addOnStatus}}" ng-class="{'text-green':addOn.addOnStatus=='active'}">
+                                    <i class="fa" ng-class="{'fa-times-circle':addOn.addOnStatus=='inactive','fa-check-circle':addOn.addOnStatus=='active',
+                                                'fa-hourglass-half':addOn.addOnStatus =='pending','fa-spinner fa-spin no-padding':addOn.addOnStatus =='processing'}
+                                                "></i>
+                                </span>
+                            </div><br><br>
+                            <div class="col-lg-12">
+                                <b>Quantity :</b> &nbsp; <span ng-if="addOn.addOnStatus =='inactive'" class="">{{addOn.quantity}}</span>
+                                <span ng-if="addOn.addOnStatus !='inactive'" class="counter">
+                                    <button class="btn btn-xs btn-counter" ng-disabled="refreshingOrderDetail" ng-click="updateAddOnQuantity(addOn,-1)"><i class="fa fa-minus" aria-hidden="true"></i></button>
+                                    <span class="counter-no">{{addOn.quantity}}</span>
+                                    <button class="btn btn-xs btn-counter pull-right" ng-disabled="refreshingOrderDetail" ng-click="updateAddOnQuantity(addOn,1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                </span>&nbsp;
+                                <button ng-if="addOn.addOnStatus !='inactive'" class="btn btn-sm bg-theme-color" ng-disabled="refreshingOrderDetail" ng-click="confirmOrderQuantityUpdate(model.orderDetail.orderNumber,true,orderLine,addOn)">Save</button>
+                                <br><br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @*End of Order Detail*@
+        </div>
+        @*Starting of Order History*@
+        <div class="row Card-detail" ng-show="logHistory">
+            <div class="col-lg-12 padding-bottom30" ng-repeat="line in model.orderDetail.lines" ng-init="line.itemLimit = 3;line.showMore = true">
+                <div>
+                    @*starting of base subscription*@
+                    <h4><b>Base Subscription</b></h4>
+                    <h5>
+                        <span>{{line.skuName}}</span> &nbsp; &nbsp; &nbsp;
+                        <span>SKU : {{line.sku}}</span>
+                    </h5>
+                    <table style="width:100%;" class="table-border">
+                        <tr style="background-color:#dddddd">
+                            <th>Change</th>
+                            <th>Total seats</th>
+                            <th>Date/Time</th>
+                            <th>User</th>
+                        </tr>
+                        <tr ng-repeat="history in line.additionalData.subscriptionHistory | orderBy:'createdOn':true track by $index" ng-show="$index < line.itemLimit" style="background-color:#fff">
+                            <td>{{history.message}}</td>
+                            <td>{{history.totalSeats}}</td>
+                            <td>{{history.createdOn | date:'dd-MMM-yy/HH:mm'}}</td>
+                            <td>{{history.createdBy}}</td>
+                        </tr>
+                        <tr ng-show="line.additionalData.subscriptionHistory.length>3">
+                            <td ng-show="line.showMore"> <a ng-click="line.itemLimit = line.additionalData.subscriptionHistory.length ; line.showMore=false">Show More</a></td>
+                            <td ng-hide="line.showMore"> <a ng-click="line.itemLimit = 3;line.showMore=true">Show Less</a></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    @*starting of AddOn*@
+                    <div class="margin-top30" ng-show="line.addOns.length>0"><h4><b>AddOns</b></h4></div>
+                    <div class="col-lg-6 no-padding-left bottom-margin15" ng-repeat="addOn in line.addOns track by $index" ng-init="addOn.itemLimitAddOn = 3;addOn.showMoreAddOn = true">
+                        <h5>SKU : {{addOn.sku}}</h5>
+                        <table style="width:100%;" class="table-border" ng-if="addOn.additionalData.subscriptionHistory.length>0">
+                            <tr style="background-color:#dddddd">
+                                <th>Change</th>
+                                <th>Total seats</th>
+                                <th>Date/Time</th>
+                                <th>User</th>
+                            </tr>
+                            <tr ng-repeat="history in addOn.additionalData.subscriptionHistory | orderBy:'createdOn':true track by $index" ng-if="$index < addOn.itemLimitAddOn" style="background-color:#fff">
+                                <td>{{history.message}}</td>
+                                <td>{{history.totalSeats}}</td>
+                                <td>{{history.createdOn  | date:'dd-MMM-yy/HH:mm'}}</td>
+                                <td>{{history.createdBy}}</td>
+                            </tr>
+                            <tr ng-show="addOn.additionalData.subscriptionHistory.length>3">
+                                <td ng-show="addOn.showMoreAddOn"> <a ng-click="addOn.itemLimitAddOn = line.additionalData.subscriptionHistory.length ; addOn.showMoreAddOn=false">Show More</a></td>
+                                <td ng-hide="addOn.showMoreAddOn"> <a ng-click="addOn.itemLimitAddOn = 3;addOn.showMoreAddOn=true">Show Less</a></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*End Of order history*@
+        </div>
+    </div>
+    <div class="modal fade" id="confirmationPopup" tabindex="-1" role="dialog" aria-labelledby="confirmationPopup">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content modal-border-0">
+                <div class="modal-header theme-modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">{{popupTitle}}</h4>
+                </div>
+                <form>
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <div class="col-lg-11">
+                            {{message}}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div ng-show="!isSuccess">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn bg-theme-color" ng-click="saveOrderQuantity(model.orderDetail,true)">Save</button>
+                        </div>
+                        <button ng-show="isSuccess" type="submit" class="btn bg-theme-color" data-dismiss="modal">Okay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="confirmationPopupForEndUser" tabindex="-1" role="dialog" aria-labelledby="confirmationPopup">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content modal-border-0">
+                <div class="modal-header theme-modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">{{popupTitle}}</h4>
+                </div>
+                <form>
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <div class="col-lg-11">
+                            {{confirmationPopupMessageForEndUser}}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div ng-show="!isSuccess">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn bg-theme-color" ng-click="saveOrderQuantity(model.orderDetail,false)">Save</button>
+                        </div>
+                        <button ng-show="isSuccess" type="submit" class="btn bg-theme-color" data-dismiss="modal">Okay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="confirmationAddOnPopup" tabindex="-1" role="dialog" aria-labelledby="confirmationAddOnPopup">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content modal-border-0">
+                <div class="modal-header theme-modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Modify AddOn Quantity</h4>
+                </div>
+                <form>
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <div class="col-lg-11">
+                            {{message}}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div ng-show="!isSuccess">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn bg-theme-color" ng-click="saveAddOnQuantity(model.orderDetail)">Save</button>
+                        </div>
+                        <button ng-show="isSuccess" type="submit" class="btn btn-primary" data-dismiss="modal">Okay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="seatExhaustedLimit" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Seat Limit:</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{{seatExhaustedLimitMessage}}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Okay</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="NotActiveSubscription" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Seat Limit:</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{{NotActiveSubscriptionMessage}}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Okay</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="userSeatLimit" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">{{popupTitle}}</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{{userSeatLimitMessage}}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="saveOrderQuantity(model.orderDetail)">Save</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="orderActivationStatusModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" ng-click="cancelChangingOrderStatus()">&times;</button>
+                    <h4 class="modal-title">{{manageOrderStatusTitle}}</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{{manageOrderStatusMessage}}</p>
+                </div>
+                <div class="modal-footer">
+                    <span ng-show="request">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="cancelChangingOrderStatus()">Cancel</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="changingOrderStatus()">Yes</button>
+                    </span>
+                    <span ng-show="!request">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Okay</button>
+                    </span>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

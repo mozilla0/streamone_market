@@ -1,0 +1,76 @@
+﻿@model IEnumerable<PrivateLabelLite.Models.Config>
+
+@{
+    ViewBag.Title = "Configuration";
+}
+
+<h4>Configuration Settings</h4>
+
+<div class="table-responsive" id="config">
+    <h5>
+        <b>APP CONFIGURATION</b>
+    </h5>
+    <table class="table table-hover">
+        @foreach (var item in Model)
+        {
+            if (item.Type == "Reseller Info")
+            {
+                <tr>
+                    <td width="20%">@Html.DisplayFor(modelItem => item.Key)</td>
+                    <td width="70%" style="white-space:inherit;word-break: break-all">@(item.Value)</td>
+                    <td width="10%" align="right">@Html.ActionLink("Edit", "Edit", new { id = item.Id })</td>
+                </tr>
+            }
+
+        }
+    </table>
+    <h5>
+        <b>API SETUP</b>
+    </h5>
+    <table class="table table-hover">
+        @foreach (var item in Model)
+        {
+            if (item.Type == "Auth")
+            {
+
+                <tr>
+                    <td width="20%">@Html.DisplayFor(modelItem => item.Key)</td>
+                    <td width="70%" style="white-space:inherit">
+                        @if ((item.Key == "client_secret") || (item.Key == "client_id"))
+                        {   
+                        item.Value = "**********";
+                            @(item.Value)
+                        }
+                        else
+                        {
+                            @(item.Value)
+                        }
+
+                    </td>
+                    <td width="10%" align="right">@Html.ActionLink("Edit", "Edit", new { id = item.Id })</td>
+                </tr>
+            }
+
+        }
+    </table>
+
+    <h5>
+        <b>API CALLS</b>
+    </h5>
+    <table class="table table-hover">
+        @foreach (var item in Model)
+        {
+            if (item.Type == "API URL")
+            {
+
+                <tr>
+                    <td width="20%">@Html.DisplayFor(modelItem => item.Key)</td>
+                    <td width="70%" style="white-space:inherit">@(item.Value)</td>
+                    <td width="10%" align="right">@Html.ActionLink("Edit", "Edit", new { id = item.Id })</td>
+                </tr>
+            }
+
+        }
+    </table>
+
+</div>

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "String",
+      "minLength": 1
+    },
+    "siteName": {
+      "type": "String",
+      "minLength": 1
+    },
+    "SQL Server/DB Password": {
+      "type": "String",
+      "minLength": 1
+    },
+	"repoURL": {
+      "type": "string",
+      "defaultValue": "https://github.com/techdata-cloudautomation/cpsso.git",
+      "metadata": {
+        "description": "The URL for the GitHub repository that contains the project to deploy."
+      }
+    },
+	"applicationId": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the application Id value."
+      },
+	  "minLength": 1
+    },
+	 "application Password": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the Application Passcode"
+      },
+	  "minLength": 1
+    },
+	"allowedResellers": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the allowedResellers"
+      },
+	  "minLength": 1
+    },
+	"clientId (Password)": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the ClientId"
+      },
+	  "minLength": 1
+    },
+	"client Secret (Password)": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the clientSecret"
+      },
+	  "minLength": 1
+    },
+	"resellerId": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the resellerId"
+      },
+	  "minLength": 1
+    },
+	"SOIN (Password)": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the SOIN"
+      },
+	  "minLength": 1
+    },
+	"resellerName": {
+      "type": "String",
+      "metadata": {
+        "description": "This is the slot for the resellerName"
+      },
+	  "minLength": 1
+    },
+	"Reseller Region": {
+      "type": "string",
+    "allowedValues": [
+      "US",
+      "EUROPE",
+      "CANADA"
+    ]
+    },
+	"notificationEmails": {
+      "type": "String",
+      "metadata": {
+        "description": "E-mail address that will be notified on every seat change"
+      },
+	  "minLength": 1
+    },
+	"notificationEmailFrom": {
+      "type": "String",
+      "metadata": {
+        "description": "E-mail that will be used with Microsoft Server to send notifications"
+      },
+	  "minLength": 1
+    },
+	"notificationEmailPassword": {
+      "type": "String",
+      "metadata": {
+        "description": "Password from NotificationE-mailFrom"
+      },
+	  "minLength": 1
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "master",
+      "metadata": {
+        "description": "The branch of the GitHub repository to use."
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+﻿@model PrivateLabelLite.Models.OrderModifiedEmailModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Email</title>
+</head>
+<body>
+    <div>
+        <p>
+            User @Model.EndUserName has modified a subscription<br />
+            Please find the details of the change below <br /><br />
+            Customer Name : @Model.CustomerName <br />
+            Company Name: @Model.CompanyName <br />
+            Customer E-mail: @Model.CustomerEmail <br />
+            Order Number: @Model.OrderNumber <br />
+            Order Details <br />
+            Product Name : @Model.SkuName <br />
+            SKU No : @Model.Sku <br />
+            Previous Seat Count: @Model.PreviousSeatCount <br />
+            Current Seat Count: @Model.CurrentSeatCount <br />
+            Time and Date Change: @Model.TimeAndDateChange.ToString()
+            <br /><br />
+
+            Thanks
+        </p>
+    </div>
+</body>
+</html>

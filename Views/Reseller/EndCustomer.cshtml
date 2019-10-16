@@ -1,0 +1,38 @@
+﻿@model PrivateLabelLite.Models.EndCustomerModels
+@using PrivateLabelLite.Helper;
+@{
+    ViewBag.Title = "EndUsers";
+}
+
+<h4>End Customers</h4>
+<div ng-controller="customerCtrl">
+    <div ng-init='model=@Html.ToJson(Model)'>
+        <table class="table">
+            <tr>
+                <th>Customer First Name</th>
+                <th>Last Name</th>
+                <th>Company Name</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>City</th>
+            </tr>
+            <tr>
+                <td><input type="text" ng-model="model.customerFilter.firstName" ng-enter="getEndCustomers()" /></td>
+                <td><input type="text" ng-model="model.customerFilter.lastName" ng-enter="getEndCustomers()" /></td>
+                <td><input type="text" ng-model="model.customerFilter.companyName" ng-enter="getEndCustomers()" /></td>
+                <td><input type="text" ng-model="model.customerFilter.phone1" ng-enter="getEndCustomers()" /></td>
+                <td></td>
+                <td><input type="text" ng-model="model.customerFilter.city" ng-enter="getEndCustomers()" /></td>
+            </tr>
+            <tr ng-repeat="customer in model.customersInfo.endCustomersDetails track by $index">
+                <td ng-bind="customer.firstName"></td>
+                <td ng-bind="customer.lastName"></td>
+                <td ng-bind="customer.companyName"></td>
+                <td ng-bind="(customer.phone1) + ' ' + (customer.phone2)"></td>
+                <td ng-bind="(customer.addressLine1) + ' ' + (customer.addressLine2)"></td>
+                <td ng-bind="customer.city">City</td>
+            </tr>
+        </table>
+        <div paging updatemethod="getEndCustomers" pageno="model.customerFilter.page" pagesize="20" totalrecords="model.customersInfo.totalRecords" isfixedpagesize="true"></div>
+    </div>
+</div>

@@ -1,0 +1,249 @@
+﻿@model PrivateLabelLite.Models.CustomerOrdersModel
+@using PrivateLabelLite.Entities.Common;
+@using PrivateLabelLite.Helper;
+@{
+    ViewBag.Title = "Index";
+    bool isReseller = false;
+    if (!String.IsNullOrEmpty(User.Identity.Email()) && ConfigKeys.AllowedResellers.ToLower().Contains(User.Identity.Email().ToLower()))
+    {
+        isReseller = true;
+    }
+}
+@*Heading and Search Button*@ 
+<div ng-controller="orderCtrl">
+<h3 class="top">    
+    <span class="btn-manage-xs pull-right hidden-md hidden-lg">
+        <a data-toggle="collapse" data-target="#search-xs" class="pull-right" style="width:43px">
+            <span class="btn-manage"><i class="fa fa-search" aria-hidden="true"></i></span>
+        </a>
+    </span>
+</h3>
+    <div class="p-left47-md">
+        @if (isReseller)
+        {
+            <h3>Customer Admin</h3>
+        }
+        else
+        {
+            <h3>Product Management</h3>
+        }
+    </div>
+    @*Search bar of mobile view*@
+    <section class="row hidden-md hidden-lg data-card collapse" id="search-xs">
+        <div class="col-xs-12">
+            <div class="row data-head">
+                @if (isReseller)
+                {
+                    <span>Search for Company, Products, Orders</span>
+                }
+                else
+                {
+                    <span>Search for Products</span>
+                }
+            </div>
+            <div class="row data-body">
+                @if (isReseller)
+                {
+                    <div class="col-sm-4 col-xs-12">
+                        <input type="text"
+                               ng-model="model.filter.companyName"
+                               ng-enter="model.filter.page = 1;getOrders()"
+                               name="endUser" class="form-control"
+                               placeholder="Company" />
+                    </div>
+                }
+                <div class="col-sm-4 col-xs-12"><input type="text" ng-model="model.filter.skuName" ng-enter="model.filter.page = 1;getOrders()" name="skuName" class="form-control" placeholder="Product" /></div>
+                @if (isReseller)
+                {
+                    <div class="col-sm-4 col-xs-12"><input type="text" ng-model="model.filter.salesOrderNo" ng-enter="model.filter.page = 1;getOrders()" name="salesOrderNo" class="form-control" placeholder="Order" /></div>
+                }
+            </div>
+            <div class="row data-footer">
+                <center>
+                    <button class="btn btn-sm bg-theme-color" ng-click="hideSearchBar();getOrders()" style="border-radius:20px"><b> Go &nbsp; &rarr;</b></button>
+                </center>
+            </div>
+        </div>
+    </section>
+    <section id="order">
+        <div ng-cloak ng-init='model=@Html.ToJson(Model);initSalesOrder();' >
+            <div>
+                <br />
+                <div class="container-fluid">
+                    @*BLUE TABLE HEADINGS*@
+                    <table class="table table-hover hidden-sm hidden-xs">
+                        <thead>
+                            <tr>
+                                @if (isReseller)
+                                {
+                                    <th class="search-th" @*width="13%"*@>
+                                        <input ng-change="model.filter.page = 1;getOrders()" type="text"
+                                               ng-model="model.filter.companyName"
+                                               ng-enter="model.filter.page = 1;getOrders()"
+                                               name="endUser" class="bg-theme-color no-focus-line"
+                                               placeholder="Company" />
+                                        <i class="fa fa-search search" aria-hidden="true" ng-click="model.filter.page = 1;getOrders()"></i>
+                                    </th>
+                                }
+                                <th @*width="14%"*@>Domain</th>
+                                <th class="search-th" style="max-width:125px">
+                                    <input  ng-change="model.filter.page = 1;getOrders()" type="text" ng-model="model.filter.skuName" ng-enter="model.filter.page = 1;getOrders()" name="skuName" class="bg-theme-color no-focus-line" placeholder="Product" />
+                                    <i class="fa fa-search search" aria-hidden="true" ng-click="model.filter.page = 1;getOrders()"></i>
+                                </th>
+                                <th class="text-center" @*width="5%"*@>Quantity</th>
+                                <th width="8%">SKU</th>
+                                <th @*width="5%"*@>Status</th>
+                                @if (isReseller)
+                                {
+                                    <th class="search-th" @*width="12%"*@>
+                                        <input type="text" ng-model="model.filter.salesOrderNo"  ng-change="model.filter.page = 1;getOrders()" ng-enter="model.filter.page = 1;getOrders()" name="salesOrderNo" class="bg-theme-color no-focus-line" placeholder="Order" />
+                                        <i class="fa fa-search search" aria-hidden="true" ng-click="model.filter.page = 1;getOrders()"></i>
+                                    </th>
+                                }
+                                <th @*width="5%"*@>
+                                    @if (isReseller)
+                                    {
+                                        <span>Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Order Status</span>
+                                    }
+                                </th>
+                                <th width="12%" class="no-padding">Purchased On</th>
+                                <th ng-hide="true">Total</th>
+                                <th style="min-width:35px"></th>
+                            </tr>
+                        </thead>
+                        @* END OF BLUE TABLE HEADINGS*@
+                        @*TABLE BODY*@
+                        <tbody class="capitalize" style="word-break:break-word">
+                            <tr ng-repeat="order in model.orders">
+                                @if (isReseller)
+                                {
+                                    @*<td>{{order.endUserName}}</td>*@
+                                    <td>{{order.company.companyName}}</td>
+                                }
+                                <td class="text-clip" title="{{order.lines[0].additionalData.domain}}">{{order.lines[0].additionalData.domain}}</td>
+                                <td>
+                                    <table>
+                                        <tr ng-repeat="line in order.lines"> @*| orderBy: 'skuName' (put it inside <tr> if needed)*@
+                                            <td class="no-padding text-clip" title="{{line.skuName}}"><span>{{line.skuName}}</span> </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td class="text-center">
+                                    <table width="100%">
+                                        <tr ng-repeat="line in order.lines">
+                                            <td class="no-padding text-center">{{ line.quantity }}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tr ng-repeat="line in order.lines">
+                                            <td class="no-padding"><span>{{line.sku}}</span> </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table width="100%">
+                                        <tr ng-repeat="line in order.lines">
+                                            <td title="{{line.lineStatus }}" ng-class="{'text-red':line.lineStatus=='cancelled','text-green':(line.lineStatus=='completed' || line.lineStatus=='active') }" class="no-padding text-center">
+                                                <i ng-class="{'fa-times-circle':line.lineStatus=='cancelled' || 'inactive',
+                                                   'fa-spinner fa-spin no-padding':line.lineStatus=='processing',
+                                                   'fa-check-circle':(line.lineStatus=='completed' || line.lineStatus=='active'),
+                                                    'fa-hourglass-half':line.lineStatus=='pending' }" class="fa" aria-hidden="true"></i>
+                                                @*'fa-times-circle':line.lineStatus=='inactive',*@
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                @if (isReseller)
+                                {
+                                    <td>{{order.orderNumber}}</td>
+                                }
+                                <td title="{{order.status}}" ng-class="{'text-red':order.status=='Cancelled','text-green':order.status=='Complete'}" class="text-center">
+                                    <i ng-class="{'fa-times-circle':order.status=='Cancelled','fa-clock-o':order.status=='Open','fa-check-circle':order.status=='Complete'}" class="fa text-center" aria-hidden="true"></i>
+                                </td>
+                                <td>{{order.orderDate | date:'dd/MMM/yy'}}</td>
+                                <td ng-hide="true">{{order.total}}</td>
+                                <td title="Manage">
+                                    <a href="/order/OrderDetail/{{order.orderNumber}}">
+                                        <span class="btn-manage"><i class="fa fa-pencil" aria-hidden="true"></i></span>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                        @*End of TABLE BODY*@
+                    </table>
+                    @*MOBILE VIEW START*@
+                    <section class="row hidden-md hidden-lg data-card" ng-repeat="order in model.orders">
+                        <div class="col-xs-12">
+                            <div class="row data-head">
+                                <div class="col-xs-6 no-padding">
+                                    <p class="no-margin">
+                                        <b>Order Status : &nbsp;</b><span title="{{order.status}}" ng-class="{'text-red':order.status=='Cancelled','text-green':order.status=='Complete'}" class="text-center">
+                                            <i ng-class="{'fa-times-circle':order.status=='Cancelled','fa-clock-o':order.status=='Open','fa-check-circle':order.status=='Complete'}" class="fa text-center" aria-hidden="true"></i>
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-xs-6 no-padding">
+                                    @if (isReseller)
+                                    {
+                                        <p class="no-margin pull-right"><b>No. :</b>{{order.orderNumber}}</p>
+                                    }
+                                </div>
+                                <div class="btn-manage-xs">
+                                    <a href="/order/OrderDetail/{{order.orderNumber}} " class="pull-right">
+                                        <span class="btn-manage"><i class="fa fa-pencil fa-2x" aria-hidden="true"></i></span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="row data-body">
+                                @if (isReseller)
+                                {
+                                    <p><b class="col-xs-4 no-padding">Company :</b>{{order.company.companyName}}</p>
+                                }
+                                <p><b class="col-xs-4 no-padding">Purchased On :</b> {{order.orderDate | date:'dd/MMM/yy'}}</p>
+                                <p><b class="col-xs-4 no-padding">Domain :</b> {{order.lines[0].additionalData.domain}}</p>
+                            </div>
+                            <div class="row data-footer">
+                                <div class="col-xs-7 no-padding">
+                                    <label class="no-margin">Product(s)</label>
+                                    <p class="no-margin" ng-repeat="line in order.lines | orderBy: 'skuName'">{{line.skuName}}</p>
+                                </div>
+                                <div class="col-xs-3 no-padding">
+                                    <label class="no-margin">SKU</label>
+                                    <p class="no-margin" ng-repeat="line in order.lines">
+                                        {{line.sku}} &nbsp;<span title="{{line.lineStatus }}" ng-class="{'text-red':line.lineStatus=='cancelled','text-green':(line.lineStatus=='completed' || line.lineStatus=='active') }" class="no-padding text-center">
+                                            <i ng-class="{'fa-times-circle':line.lineStatus=='cancelled',
+                                                   'fa-spinner fa-spin no-padding':line.lineStatus=='processing',
+                                                   'fa-check-circle':(line.lineStatus=='completed' || line.lineStatus=='active'),
+                                                   'fa-times-circle':line.lineStatus=='inactive', 'fa-hourglass-half':line.lineStatus=='pending' }" class="fa" aria-hidden="true"></i>
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-xs-2 no-padding">
+                                    <span class="pull-right">
+                                        <label class="no-margin">Qty</label>
+                                        <p class="no-margin text-right" ng-repeat="line in order.lines">{{ line.quantity }}</p>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    @*mobile view end*@
+                    <div>
+                        <span>
+                            <b class="pull-right">
+                                <span ng-if="@isReseller.ToString().ToLower()">{{order.total}}</span>
+                            </b>
+                        </span>
+                    </div>
+                    <div paging updatemethod="getOrders" pageno="model.filter.page" pagesize="@ConfigKeys.PageSize" totalrecords="model.filter.totalRecords" isfixedpagesize="true"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

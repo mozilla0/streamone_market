@@ -1,0 +1,293 @@
+﻿@model PrivateLabelLite.Models.CompanyEndUserMappingModels
+@using PrivateLabelLite.Entities.Common;
+@using PrivateLabelLite.Helper;
+@{
+    ViewBag.Title = "EndUserMapping";
+}
+@*Search Button*@
+<h3 class="top">
+    <span class="btn-manage-xs pull-right hidden-md hidden-lg">
+        <a data-toggle="collapse" data-target="#search-xs" class="pull-right" style="width:43px">
+            <span class="btn-manage"><i class="fa fa-search" aria-hidden="true"></i></span>
+        </a>
+    </span>
+</h3>
+<div ng-controller="companyCtrl" ng-init='model=@Html.ToJson(Model); model.user = {};isVisible=true ; showSingleDelete = false;checkCompanyTable()' class="container-fluid">
+    <div>
+        <h3>App User Management</h3>
+        <button class="btn btn-sm btn-primary" ng-click="showEndUserPopup()">Add App User</button>
+        <button ng-hide="model.user.id" class="btn btn-sm btn-primary" title="The process may take a minute or two." ng-click="refreshCompanies()">Refresh</button><i class="fa fa-question-circle-o" aria-hidden="true" title="In case you cannot find a company that is present in StreamOne, click on refresh"></i>
+        <span class="row pull-right visible-xs visible-sm" ng-show="showSingleDelete" ng-cloak>
+            <a ng-show="showSingleDelete" ng-click='showMultipleDeleteEndUserPopup()' title="Delete">
+                <span class="btn-manage btn-delete"><i class="fa fa-trash-o fa-2x" aria-hidden="true"></i></span>
+            </a>&nbsp;
+        </span>
+        <br><br>
+    </div>
+    @*Search bar of mobile view*@
+    <section class="row hidden-md hidden-lg data-card collapse" id="search-xs">
+        <div class="col-xs-12">
+            <div class="row data-head">
+                <span>Search for Company</span>
+            </div>
+            <div class="row data-body">
+                <div class="col-sm-12 col-xs-12">
+                    <div typeahead data="model.companies" model-text="model.user.companyName"
+                         no-of-suggestions="5" required-field="true" is-disabled="model.user.id"
+                         model="model.selectedCompany"
+                         method-param-1="model.filter" text-field-name="companyName" text-placeholder="Companies" on-change-method="getCompanyEndUsers"></div>
+                </div>
+                <div class="col-sm-12 col-xs-12">
+                    <div typeahead data="model.endUserEmails" model-text="model.filter.email"
+                         no-of-suggestions="5" required-field="true" is-disabled="model.user.id"
+                         model="model.endUsers.email" method-param-1="model.filter"
+                         text-field-name="email" text-placeholder="Search Email" on-change-method="getCompanyEndUsers">
+                    </div>
+                </div>
+            </div>
+            <div class="row data-footer">
+                <center>
+                    <button class="btn btn-sm bg-theme-color" ng-click="hideSearchBar();model.filter.page = 1;getCompanyEndUsers(model.filter)" style="border-radius:20px"><b> Go &nbsp; &rarr;</b></button>
+                </center>
+            </div>
+        </div>
+    </section>
+    <div class="table-responsive visible-lg visible-md" style="min-height:350px">
+        @*BLUE TABLE HEADINGS*@
+        <table class="table table-hover">
+            <thead>
+                <tr class="capitalize">
+                    <th>Select</th>
+                    <th class="search-th search-xs" width="20%">
+                        Company
+                    </th>
+                    <th>App User</th>
+                    <th class="hidden-xs">Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            @* END OF BLUE TABLE HEADINGS*@
+            @*TABLE BODY*@
+            <tr class="hidden-xs hidden-sm">
+                <td></td>
+                <td>
+                    <div typeahead data="model.companies" model-text="model.filter.companyName"
+                         no-of-suggestions="5" required-field="true" is-disabled="model.user.id"
+                         model="model.filter.selectedCompany" method-param-1="model.filter"
+                         text-field-name="companyName" text-placeholder="Search Companies" on-change-method="getCompanyEndUsers">
+                    </div>
+                </td>
+                <td></td>
+                <td>
+                    <div typeahead data="model.endUserEmails" model-text="model.filter.email"
+                         no-of-suggestions="5" required-field="true" is-disabled="model.user.id"
+                         model="model.endUsers.email" method-param-1="model.filter"
+                         text-field-name="email" text-placeholder="Search Email" on-change-method="getCompanyEndUsers">
+                    </div>
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <td><a ng-click="getCompanyEndUsers(model.filter)"><span class="btn-manage"><i class="fa fa-search "></i></span></a>&nbsp;&nbsp;</td>
+                            <td><a ng-click="clearCompanySearch()"><span class="btn-manage"><i class="fa fa-close "></i></span></a>&nbsp;&nbsp; </td>
+                            <td class="" ng-show="showSingleDelete" ng-cloak>
+                                <a ng-show="showSingleDelete" ng-click='showMultipleDeleteEndUserPopup()' title="Delete">
+                                    <span class="btn-manage btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></span>
+                                </a>&nbsp;
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr ng-repeat="user in model.endUsers track by $index" ng-cloak>
+                <td><input type="checkbox" ng-model="user.checked" ng-change="hideEditForEndUser(user.checked);" /></td>
+                <td class="capitalize" ng-bind="user.companyName"></td>
+                <td class="capitalize" ng-bind="user.name"></td>
+                <td ng-bind="user.email" class="hidden-xs"></td>
+                <td>
+                    <table ng-show="isVisible">
+                        <tr>
+                            <td>
+                            <td class="no-padding">
+                                <a ng-click='editEndUser(user)' title="Manage"><span class="btn-manage"><i class="fa fa-pencil" aria-hidden="true"></i></span></a> &nbsp;
+                            </td>
+                            <td class="no-padding">
+                                <a ng-click='showDeleteEndUserPopup(user)' title="Delete"> <span class="btn-manage btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></span></a>&nbsp;
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            @*End of TABLE BODY*@
+        </table>
+    </div>
+    @*MOBILE VIEW START*@
+    <section class="row visible-xs visible-sm data-card" ng-repeat="user in model.endUsers track by $index">
+        <div class="col-xs-12">
+            @*row for company*@
+            <div class="row data-head">
+                <input type="checkbox" ng-model="user.checked" ng-change="hideEditForEndUser(user.checked);" />
+            </div>
+            <div class="row data-body">
+                <div class="col-xs-10 col-sm-6">
+                    <div class="row">
+                        <b>Customer Company :</b>
+                        <span ng-bind="user.companyName"></span>
+                    </div>
+                    <p>
+                        <div class="row">
+                            <b>Customer User :</b>
+                            <span ng-bind="user.name"></span>
+                        </div>
+                    </p>
+                    <div class="row">
+                        <b>Customer Email :</b>
+                        <span ng-bind="user.email"></span>
+                    </div>
+                </div>
+                <div class="col-xs-2 col-sm-6" ng-show="isVisible">
+                    <div class="row pull-right">
+                        <a ng-click='editEndUser(user)' title="Manage"><span class="btn-manage"><i class="fa fa-pencil" aria-hidden="true"></i></span></a> &nbsp;&nbsp;&nbsp;&nbsp;
+                    </div>
+                    <div class="row pull-right margin-top30">
+                        <a ng-click='showDeleteEndUserPopup(user)' title="Delete"> <span class="btn-manage btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></span></a>&nbsp;&nbsp;
+                    </div>
+                </div>
+            </div> @*end of row for company*@
+            <div class="row data-footer"></div>
+        </div>
+    </section>
+    <div paging updatemethod="getPaginatedUsers" pageno="model.filter.page" pagesize="@ConfigKeys.PageSize" totalrecords="model.filter.totalRecords" isfixedpagesize="true"></div>
+    @*Edit user popup*@
+    <div class="modal fade" id="endUserPopup" tabindex="-1" role="dialog" aria-labelledby="endUserPopup">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                @*HEADER*@
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title capitalize" id="myModalLabel">{{addEditUserHeader}}</h4>
+                </div>
+                @*BODY*@
+                <form name="addUserMappingForm" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body table-responsive no-border">
+                        <p ng-class="{'text-success' : isSuccess, 'text-danger':!isSuccess}">{{message}}</p>
+                        <div ng-if="!isSuccess">
+                            <div class="form-group">
+                                @*@Html.Label("Customer Company", new { @class = "col-lg-6 control-label" })*@
+                                <div class="col-md-10" ng-init="model.user.companyName">
+                                    <div ng-hide="model.user.id">
+                                        <div typeahead data="model.companies" text-placeholder="Company"
+                                             no-of-suggestions="5" required-field="true"
+                                             is-disabled="model.user.id" model-text="model.user.companyName"
+                                             model="model.user.selectedCompany" text-field-name="companyName"></div>
+                                    </div>
+                                    <div ng-show="model.user.id">
+                                        <input type="text" disabled="disabled" value="{{model.user.companyName}}" class="form-control" />
+                                    </div>
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @*@Html.Label("Customer User Name", new { @class = "col-md-6 control-label" })*@
+                                <div class="col-md-10">
+                                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control", @ng_model = "model.user.name", @required = "required", @autocomplete = "off", @placeholder = "Name" })
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @*@Html.LabelFor(m => m.Email, new { @class = "col-md-3 control-label" })*@
+                                <div class="col-md-10">
+                                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @ng_model = "model.user.email", @required = "required", @type = "email", @autocomplete = "off", @placeholder = "Email" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @*FOOTER*@
+                    <div class="modal-footer">
+                        <div ng-show="!isSuccess">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" ng-disabled="addUserMappingForm.$invalid" ng-click="addEndUserMapping(model)">Add</button>
+                        </div>
+                        <button ng-show="isSuccess" type="submit" class="btn btn-primary" data-dismiss="modal">Okay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @*single delete popup*@
+    <div class="modal fade" id="deleteEndUserPopup" tabindex="-1" role="dialog" aria-labelledby="endUserPopup">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                @*HEADER*@
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Delete User : {{model.user.name}}</h4>
+                </div>
+                <form name="deleteEndUser">
+                    @Html.AntiForgeryToken()
+                    @*BODY*@
+                    <div class="modal-body">
+                        {{message}}
+                    </div>
+                    @*FOOTER*@
+                    <div class="modal-footer">
+                        <div ng-show="!isSuccess">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger" ng-click="deleteEndUserMapping()">Delete</button>
+                        </div>
+                        <button ng-show="isSuccess" type="submit" class="btn btn-primary" data-dismiss="modal">Okay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @*multiple delete popup*@
+    <div class="modal fade" id="deleteMultipleEndUserPopup" tabindex="-1" role="dialog" aria-labelledby="endUserPopup">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                @*HEADER*@
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Delete Users</h4>
+                </div>
+                @*BODY*@
+                <form name="deleteEndUser">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        {{message}}
+                    </div>
+                    @*FOOTER*@
+                    <div class="modal-footer">
+                        <div ng-show="!isSuccess">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger" ng-click="deleteEndUserMapping()">Delete</button>
+                        </div>
+                        <button ng-show="isSuccess" type="submit" class="btn btn-primary" data-dismiss="modal">Okay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <br />
+    <br />
+    <div id="initRefreshCompanyModal" class="modal fade" data-toggle="modal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">{{refreshCompanyModalTitle}}</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{{refreshCompanyModalMessage}}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

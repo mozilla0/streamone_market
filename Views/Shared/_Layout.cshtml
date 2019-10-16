@@ -1,0 +1,106 @@
+﻿@using PrivateLabelLite.Controllers;
+@using PrivateLabelLite.Helper;
+@using PrivateLabelLite.Entities.Common;
+@using Microsoft.AspNet.Identity;
+@{
+    bool isReseller = false;
+    if (!String.IsNullOrEmpty(User.Identity.Email()) && ConfigKeys.AllowedResellers.ToLower().Contains(User.Identity.Email().ToLower()))
+    {
+        isReseller = true;
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @*@Scripts.Render("~/bundles/modernizr")*@ 
+</head>
+<body ng-app="app" ng-cloak ng-controller="globalCtrl">
+    <div class="navbar navbar-default navbar-fixed-top container-fluid">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @if (isReseller)
+                {
+                    @Html.ActionLink(ConfigKeys.ApplicationName, "Subscriptions", "Order", new { id = (string)null }, new { @class = "navbar-brand", @style = "cursor:inherit" })
+                }
+                else
+                {
+                    @Html.ActionLink(ConfigKeys.ApplicationName, "Subscriptions", "Order", new { area = "" }, new { @class = "navbar-brand", @style = "cursor:inherit" })
+                }
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    @*<li>@Html.ActionLink("Home", "Index", "Home")</li>
+                        <li>@Html.ActionLink("About", "About", "Home")</li>*@
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        if (!string.IsNullOrEmpty(User.Identity.Email()) && (ConfigKeys.AllowedResellers ?? "").ToLower().Contains(User.Identity.Email().ToLower()))
+                        {
+                            <li class="visible-sm visible-xs">
+                                <a style="cursor:inherit">Hello  @User.Identity.GetUserName() </a>
+                            </li>
+                            <li><a href='@Url.Action("Subscriptions", "Order",new { id = (string)null })'>Customer Admin</a></li>
+                            <li class="dropdown ">
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Settings <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="/company/endUserMapping">Add App User </a></li>
+                                    <li><a href="/company/SalesOrderMapping">Sales Order Mapping</a></li>
+                                    <li><a href="/company/EditProducts">Price Management</a></li>
+                                </ul>
+                            </li>
+                        }
+                    }
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid body-content">
+        <div class="margin-top-sm margin-bottom-sm">
+            <div style="margin-top: 15px;">
+                @RenderBody()
+                @{
+                    Html.RenderPartial("~/Views/home/TermsAndConditions.cshtml");
+                }
+            </div>
+        </div>
+    </div>
+    <hr />
+    <footer class="row no-margin">
+        @if (isReseller)
+        {
+            @*<div class="col-lg-3 pull-right col-md-3 col-sm-3 col-xs-12">
+                <img class="img-responsive" src="~/Assets/images/Tech Data Cloud Solutions StreamOne.jpg" />
+            </div>*@
+            <div class="col-lg-7 col-md-6 col-sm-4 col-xs-12 margin-top10">
+                <span>&copy; @DateTime.Now.Year @ConfigKeys.ApplicationName  V @ConfigKeys.WebPagesVersion</span>
+                <a ng-click="showSiteTermsAndConditions()" class="text-center">End User Terms and Conditions</a>
+            </div>
+        }
+        else
+        {
+            <div>
+                <span>&copy; @DateTime.Now.Year @ConfigKeys.ApplicationName  V @ConfigKeys.WebPagesVersion</span>
+                <a ng-click="showSiteTermsAndConditions()" class="text-center">End User Terms and Conditions</a>
+            </div>
+        }
+    </footer>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/libraries")
+    @Scripts.Render("~/bundles/js")
+    @RenderSection("scripts", required: false)
+    <loader></loader>
+    <script>
+        app.constant('BASE_URL', '@Request.Url.Scheme://@Request.ServerVariables["HTTP_HOST"]/');
+    </script>
+</body>
+</html>
