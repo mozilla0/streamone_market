@@ -11,7 +11,8 @@ app to modify seat quantity so you no longer need to be involved in the process,
 <p><strong>Who will it be available to?</strong><br />It is available to all customers that have basic Azure knowledge and an Azure account.</p>
 <p><strong>What does Customer Portal SDK - StreamOne look like?</strong><br />It looks great! It has a very simple and modern looking Graphical User Interface (GUI).</p>
 <p><img src="https://github.com/techdata-cloudautomation/cpsso/blob/master/Marketing/9_Customer%20Portal%20SDK%20View.JPG?raw=true" alt="" width="770" height="410" /></p>
-<p><strong>What are the customer pre-requisites?<br /></strong>&bull; Customer Portal SDK StreamOne License Terms<br />&bull; Partner API credentials<br />&bull; Azure account &amp; CSP subscription<br />&bull; Microsoft account for login</p>
+<p><strong>What are the customer pre-requisites?<br /></strong>&bull; Customer Portal SDK StreamOne License Terms<br />&bull; Partner API credentials<br />&bull; Azure account &amp; CSP subscription (with Global Access Level)<br />&bull; Microsoft account for login
+</strong>&bull; O365 E-mail to trigger notifications<br />&bull;E-mail to receive notifications<br />
 <p><strong>When Hosting the SDK</strong><br />&bull; Partner resources to maintain it on Azure&nbsp;<br />&bull; Estimate monthly cost ~USD4.90 (List Price, VAT Excluded)<br />App Service, Free Tier, F1, 1 GB RAM, 1 GB Storage<br />Azure SQL DB Single Database, Basic Tier. 5 DTUs, 2, 2 GB</p>
 <p><strong>How to get onboarded?</strong><br />Contact SCM Customer Integrations Team according of your region:</p>
 <p><strong>EUROPE</strong><br /><a href="mailto:EU.API.Support@Techdata.com">EU.API.Support@Techdata.com</a><br /><strong>US</strong><br /><a href="mailto:PartnerApi@Techdata.com">PartnerApi@Techdata.com</a><br /><strong>CANADA</strong><br /><a href="mailto:StreamOne@Techdata.ca">StreamOne@Techdata.ca</a></p>
