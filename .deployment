@@ -1,3 +1,4 @@
 [config]
-SCM_POST_DEPLOYMENT_ACTIONS_PATH = deployment\postdeployactions\
 command = cpssodeploy.cmd
+SCM_POST_DEPLOYMENT_ACTIONS_PATH = deployment\postdeployactions\
+
