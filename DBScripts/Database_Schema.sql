@@ -1231,19 +1231,21 @@ GO
 
 CREATE proc [dbo].[procIsUserAuthorizeToIncreaseSeat]
 (
- @Quantity nvarchar(max),
- @SKU nvarchar(50),
- @SeatCounter int,
- @OrderNumber nvarchar(50),
- @OriginalQuantity int
+	@Quantity nvarchar(max),
+	@SKU nvarchar(50),
+	@SeatCounter int,
+	@OrderNumber nvarchar(50),
+	@OriginalQuantity int
 )
-as
+AS
 
 BEGIN
 	DECLARE @Response as bit,@counter int,@SeatLimitEndTime dateTime,@TemporarySeatLimit int,@SeatLimit int
 
 	SELECT @counter = ISNULL(SSD.SeatCounter,0) , @TemporarySeatLimit = ISNULL(TemporarySeatLimit,0),@SeatLimit = ISNULL(SeatLimit,0),
-			@SeatLimitEndTime = ISNULL(SeatLimitEndTime,0) from SubscriptionSummaryDetail SSD where SSD.OrderNumber = @OrderNumber and SSD.SKU = @SKU 
+			@SeatLimitEndTime = ISNULL(SeatLimitEndTime,0) 
+			from SubscriptionSummaryDetail SSD 
+			where SSD.OrderNumber = @OrderNumber and SSD.SKU = @SKU AND ISNULL(SSD.EndCustomerId,'')<>'' and CHARINDEX('synced',SSD.EndCustomerId,0)=0
 
 	If(@SeatLimit > 0)
 	BEGIN
@@ -1251,7 +1253,7 @@ BEGIN
 		BEGIN
 			Update SubscriptionSummaryDetail
 			set SeatCounter = 0,TemporarySeatLimit = @SeatLimit
-			where OrderNumber = @OrderNumber and SKU = @SKU 
+			where OrderNumber = @OrderNumber and SKU = @SKU AND ISNULL(EndCustomerId,'')<>'' and CHARINDEX('synced',EndCustomerId,0)=0
 			set @counter = 0
 		END
 
@@ -1265,7 +1267,7 @@ BEGIN
 			BEGIN
 				Update SubscriptionSummaryDetail
 				set SeatLimitStartTime = GETDATE(),SeatLimitEndTime = SeatLimitStartTime + 1,SeatCounter = @counter + 1
-				where OrderNumber = @OrderNumber and SKU = @SKU 
+				where OrderNumber = @OrderNumber and SKU = @SKU AND ISNULL(EndCustomerId,'')<>'' and CHARINDEX('synced',EndCustomerId,0)=0
 				set @Response = 1
 			END
 		END
@@ -1277,7 +1279,9 @@ BEGIN
 			End
 			Else
 			Begin
-				select @SeatLimitEndTime = ISNULL(SSD.SeatLimitEndTime,0) from SubscriptionSummaryDetail SSD where SSD.OrderNumber = @OrderNumber and SSD.SKU = @SKU 
+				select @SeatLimitEndTime = ISNULL(SSD.SeatLimitEndTime,0) 
+				from SubscriptionSummaryDetail SSD 
+				where SSD.OrderNumber = @OrderNumber and SSD.SKU = @SKU AND ISNULL(SSD.EndCustomerId,'')<>'' and CHARINDEX('synced',SSD.EndCustomerId,0)=0
 				if(getDate() > @SeatLimitEndTime)
 				begin
 					set @Response = 0
@@ -1286,7 +1290,7 @@ BEGIN
 				Begin
 					Update SubscriptionSummaryDetail
 					set SeatCounter = @counter + 1
-					where OrderNumber = @OrderNumber and SKU = @SKU 
+					where OrderNumber = @OrderNumber and SKU = @SKU AND ISNULL(EndCustomerId,'')<>'' and CHARINDEX('synced',EndCustomerId,0)=0
 				
 					set @Response = 1
 				End
