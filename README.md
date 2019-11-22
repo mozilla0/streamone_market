@@ -109,6 +109,16 @@ app to modify seat quantity so you no longer need to be involved in the process,
 </ul>
 <p><strong>VERSION 1.55 Fixes:</strong></p>
 <p>- App Sync shows Settings Data&nbsp;<br />Previously version 1.54 was not linking correcly the existing setting data in the DB with the new App Logic.So at App UI old settings data was not visible.Version 1.55 brings a fix to this. After sincing the correct linking of data will be avaiable with previous App configuration.</p>
+<p><em><strong>VERSION 1.56 and 1.57 Fixes</strong></em></p>
+<ul>
+<li><em>Small bugs</em><em>&nbsp;</em></li>
+</ul>
+<p><em><strong>VERSION 1.58 Fixes</strong></em></p>
+<ul>
+<li><em>Only compiled code is available.</em><em>&nbsp;</em></li>
+<li><em>Bug fix for a fix for a small bug that was affecting a single Reseller.</em><em>&nbsp;</em></li>
+<li><em>Third party library updates.</em><em>&nbsp;</em></li>
+</ul>
 <p><strong>INSTALLATION DEPLOYMENT</strong></p>
 <!--<a href="https://azuredeploy.net/" target="_blank">
    <img src="http://azuredeploy.net/deploybutton.png"/>
