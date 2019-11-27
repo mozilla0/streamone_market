@@ -65,7 +65,7 @@ app to modify seat quantity so you no longer need to be involved in the process,
 <p><em>Notice that:&nbsp;Real password of the e-mail account above.</em></p>
 <p>&nbsp;<img src="https://github.com/techdata-cloudautomation/cpsso/blob/master/Marketing/5.jpg?raw=true" alt="" width="500" height="333" /></p>
 <p><strong>After-deployment &nbsp;Best Practices</strong></p>
-<p>&nbsp; First Time you login in to the Application make sure that you use the same e-mail that you have used in the field Allowed Resellers</p>
+<p>&nbsp;First Time you login in to the Application make sure that you use the same e-mail that you have used in the field Allowed Resellers</p>
 <p>&nbsp;<strong>Support Documents</strong></p>
 <p>Support Documents are to be found in the root of the application</p>
 <ul>
