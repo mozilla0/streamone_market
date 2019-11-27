@@ -24,7 +24,7 @@ app to modify seat quantity so you no longer need to be involved in the process,
 <li>Make sure you have the right level of access on the Azure Directory and Subscription before deploying the App (Global Admin Rights)</li>
 <li>Notice that Azure Powershell has only 20 minutes before it times out. You should prepare the Settings info forehanded.</li>
 <li>In order for you to use Powershell you will need a storage account. If you have never used Powershell you will be asked for a specific Resource Group Name, Storage account Name &amp; File share Name.</li>
-<li>After the deployment you can delete the storage account crated to use Powershell</li>
+<li>After the deployment you can delete the storage account created to use Powershell</li>
 </ol>
 <p><strong>Step by Step for Deployment</strong></p>
 <p>1. Downloaded the Script</p>
